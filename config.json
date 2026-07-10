@@ -1,0 +1,14 @@
+{
+    "bot": [
+        {
+            "id": "default",
+            "status":true,
+            "appid": "",
+            "secret": ""
+        }
+    ],
+    "admin": {
+        "account": "admin",
+        "password": "123456"
+    }
+}
