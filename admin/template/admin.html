@@ -488,6 +488,7 @@ tr:hover td{background:#fafafa}
 // ==================== Global State ====================
 const API = './core/api.php';
 let BOT_ID = '';
+let BOT_APPID = '102084996';
 
 async function api(type, data = {}) {
   if (BOT_ID && !data.bot_id) data.bot_id = BOT_ID;
@@ -504,23 +505,28 @@ async function apiUpload(type, data, fileField, file) {
 }
 
 // ==================== Bot Selector ====================
+let _bots = [];
 async function loadBotSelector() {
   const res = await fetch(API, { method: 'POST', body: (() => { const fd = new FormData(); fd.append('type', 'botList'); return fd; })() });
   const data = await res.json();
   const sel = document.getElementById('botSelect');
   if (data.code !== 200 || !data.data.length) { sel.innerHTML = '<option value="">无Bot</option>'; return; }
-  const bots = data.data;
-  sel.innerHTML = bots.map(b => `<option value="${b.id}">${b.appid.substring(0,10)}...</option>`).join('');
+  _bots = data.data;
+  sel.innerHTML = _bots.map(b => `<option value="${b.id}">${b.appid.substring(0,10)}...</option>`).join('');
   // 默认选第一个启用或第一个
-  const active = bots.find(b => b.status) || bots[0];
+  const active = _bots.find(b => b.status) || _bots[0];
   sel.value = active.id;
   BOT_ID = active.id;
+  BOT_APPID = active.appid;
   await onBotChange();
 }
 
 async function onBotChange() {
   BOT_ID = document.getElementById('botSelect').value;
   if (!BOT_ID) return;
+  // 更新 appid
+  const bot = _bots.find(b => b.id === BOT_ID);
+  if (bot) BOT_APPID = bot.appid;
   // 获取 bot 头像昵称
   try {
     const res = await api('botInfo', { bot_id: BOT_ID });
@@ -647,7 +653,7 @@ async function loadDashboard() {
       </div>
       <div class="chart-box" style="border:1px solid var(--border2);padding:0">
         <div class="chart-title" style="padding:16px 16px 10px">用户使用排行 Top5</div>
-        ${d.topUsers.length ? d.topUsers.map((u,i) => `<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;cursor:pointer;border-top:1px solid var(--border2);transition:background .1s" onclick="showToast('用户ID','${esc(u.id)}','确定')" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''"><span style="color:var(--text3);width:22px;font-weight:500;flex-shrink:0;text-align:center">${i+1}</span><img src="https://q.qlogo.cn/qqapp/102084996/${u.id}/640" style="width:28px;height:28px;border-radius:50%;flex-shrink:0" onerror="this.style.display='none'"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${esc(u.name||u.id.substring(0,16)+'...')}</span><span style="font-weight:500;flex-shrink:0;color:var(--text2)">${u.count} 条</span></div>`).join('') : '<div style="color:var(--text3);font-size:13px;padding:16px;border-top:1px solid var(--border2)">暂无数据</div>'}
+        ${d.topUsers.length ? d.topUsers.map((u,i) => `<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;cursor:pointer;border-top:1px solid var(--border2);transition:background .1s" onclick="showToast('用户ID','${esc(u.id)}','确定')" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''"><span style="color:var(--text3);width:22px;font-weight:500;flex-shrink:0;text-align:center">${i+1}</span><img src="https://q.qlogo.cn/qqapp/${BOT_APPID}/${u.id}/640" style="width:28px;height:28px;border-radius:50%;flex-shrink:0" onerror="this.style.display='none'"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${esc(u.name||u.id.substring(0,16)+'...')}</span><span style="font-weight:500;flex-shrink:0;color:var(--text2)">${u.count} 条</span></div>`).join('') : '<div style="color:var(--text3);font-size:13px;padding:16px;border-top:1px solid var(--border2)">暂无数据</div>'}
       </div>
     </div>
   `;
@@ -845,7 +851,7 @@ async function loadLogGroups() {
     cs.innerHTML = c2cUsers.map(u => {
       const active = LS.currentType === 'c2c' && LS.currentC2c === u.user_id;
       return `<div class="group-card c2c ${active?'active':''}" onclick="selectLogGroup('${u.user_id}','c2c')">
-        <div class="gc-avatar"><img src="https://q.qlogo.cn/qqapp/102084996/${u.user_id}/640" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\\'ri-user-3-line\\'></i>'"></div>
+        <div class="gc-avatar"><img src="https://q.qlogo.cn/qqapp/${BOT_APPID}/${u.user_id}/640" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\\'ri-user-3-line\\'></i>'"></div>
         <div class="gc-info"><div class="gc-name">${esc(u.user_name)}</div><div class="gc-meta">${esc(u.last_time||'')}</div></div>
         <div class="gc-badge">${u.message_count}</div>
       </div>`;
@@ -964,7 +970,7 @@ function buildMsgCard(m, idx) {
 
   // 事件卡片
   if (m.type === 'member_add' || m.type === 'member_remove') {
-    const avatarUrl = m.member_id ? `https://q.qlogo.cn/qqapp/102084996/${m.member_id}/640` : '';
+    const avatarUrl = m.member_id ? `https://q.qlogo.cn/qqapp/${BOT_APPID}/${m.member_id}/640` : '';
     const label = m.type === 'member_add' ? '加入本群' : '离开本群';
     return `<div class="msg-card event-card" ${rawClick}>
       <div class="event-avatar">${avatarUrl?`<img src="${avatarUrl}" loading="lazy" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\\'ri-user-3-line\\'></i>'">`:''}</div>
@@ -983,7 +989,7 @@ function buildMsgCard(m, idx) {
   if (m.type === 'friend_del') return `<div class="msg-card event-card" ${rawClick}><i class="ri-user-unfollow-line"></i> 好友删除 <span class="event-time">${timeLabel(m.time)}</span></div>`;
 
   const isBot = m.author_bot;
-  const avatarUrl = m.author_id ? `https://q.qlogo.cn/qqapp/102084996/${m.author_id}/640` : '';
+  const avatarUrl = m.author_id ? `https://q.qlogo.cn/qqapp/${BOT_APPID}/${m.author_id}/640` : '';
   const timeStr = m.time ? new Date(m.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : '';
 
   let bodyHtml = '';
