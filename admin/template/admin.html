@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+<title>Tenor 管理后台</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4/fonts/remixicon.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f5f5;--card:#fff;--border:#e5e5e5;--border2:#f0f0f0;
+  --text:#1a1a1a;--text2:#555;--text3:#999;
+  --accent:#1a1a1a;--accent-hover:#333;
+  --danger:#e03131;--danger-bg:#fff5f5;--green:#2f9e44;--green-bg:#f0fdf4;
+  --orange:#e8590c;--orange-bg:#fff9f0;--blue:#1971c2;--blue-bg:#e7f5ff;
+  --sidebar-w:230px;--topbar-h:52px;
+  --radius:12px;--radius-sm:8px;
+  --shadow:0 1px 8px rgba(0,0,0,0.04),0 1px 3px rgba(0,0,0,0.02);
+}
+body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);min-height:100vh;line-height:1.5;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit;cursor:pointer;border:none;outline:none;font-size:14px}
+input,textarea,select{font-family:inherit;font-size:14px;outline:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;background:#f8f8f8;color:var(--text);transition:border .15s,background .15s}
+input:focus,textarea:focus,select:focus{border-color:#aaa;background:var(--card)}
+
+/* ===== Sidebar ===== */
+.sidebar{width:var(--sidebar-w);background:var(--card);border-right:1px solid var(--border2);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform .25s}
+.sidebar-logo{padding:16px 20px;font-size:20px;font-weight:600;color:var(--accent);border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between}
+.sidebar-logo .menu-close{display:none;background:none;color:var(--text3);font-size:20px;width:32px;height:32px;border-radius:50%;align-items:center;justify-content:center}
+.sidebar-nav{flex:1;padding:8px;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);font-size:14px;color:var(--text2);cursor:pointer;transition:all .1s;margin-bottom:1px}
+.nav-item:hover{background:#f5f5f5;color:var(--text)}
+.nav-item.active{background:#f0f0f0;color:var(--accent);font-weight:500}
+.nav-item i{font-size:17px;width:20px;text-align:center}
+.nav-divider{margin:10px 12px 6px;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px}
+.sidebar-footer{padding:10px 14px;border-top:1px solid var(--border2);font-size:13px;color:var(--text2)}
+.sidebar-footer .btn-logout{font-size:12px;color:var(--text3);background:none;padding:4px 0;margin-top:2px}
+.sidebar-footer .btn-logout:hover{color:var(--danger)}
+
+/* ===== Main ===== */
+.main{margin-left:var(--sidebar-w);flex:1;min-width:0}
+.topbar{height:var(--topbar-h);background:var(--card);border-bottom:1px solid var(--border2);display:flex;align-items:center;padding:0 20px;position:sticky;top:0;z-index:50;gap:10px}
+.topbar .menu-btn{display:none;background:none;color:var(--text);font-size:22px;width:36px;height:36px;border-radius:50%;align-items:center;justify-content:center}
+.topbar .menu-btn:hover{background:#f5f5f5}
+.topbar .page-title{font-size:17px;font-weight:500;display:flex;align-items:center;gap:8px}
+.topbar .page-title i{font-size:18px;color:var(--text3)}
+
+/* Bot selector */
+.bot-selector{display:flex;align-items:center;gap:8px;margin-left:auto;font-size:13px}
+.bot-selector select{padding:5px 10px;font-size:13px;border-radius:var(--radius-sm);border:1px solid var(--border);background:#f8f8f8;cursor:pointer;max-width:150px}
+.bot-selector .bot-avatar{width:24px;height:24px;border-radius:50%;background:#e0e0e0;overflow:hidden;flex-shrink:0}
+.bot-selector .bot-avatar img{width:100%;height:100%;object-fit:cover}
+
+.content{padding:20px 24px}
+.page{display:none}
+.page.active{display:block}
+
+/* ===== Cards ===== */
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border2);padding:20px;box-shadow:var(--shadow)}
+.card+.card{margin-top:16px}
+.card-title{font-size:16px;font-weight:500;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title i{font-size:17px;color:var(--text3)}
+
+/* ===== Stats ===== */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.stat-card{background:var(--card);border:1px solid var(--border2);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow)}
+.stat-card .stat-label{font-size:12px;color:var(--text3);margin-bottom:2px}
+.stat-card .stat-value{font-size:26px;font-weight:600;color:var(--accent)}
+.stat-card .stat-sub{font-size:12px;color:var(--text3);margin-top:2px}
+
+/* ===== Charts ===== */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-box{background:var(--card);border:1px solid var(--border2);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);overflow:hidden}
+.chart-box .chart-title{font-size:14px;font-weight:500;margin-bottom:10px;color:var(--text2)}
+.chart-box svg{width:100%;height:auto}
+
+/* ===== Tables ===== */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:10px 14px;text-align:left;font-size:13px;border-bottom:1px solid var(--border2)}
+th{font-weight:500;color:var(--text3);font-size:12px;background:#fafafa}
+tr:hover td{background:#fafafa}
+
+/* ===== Buttons ===== */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:18px;font-size:13px;font-weight:450;transition:all .12s;background:var(--accent);color:#fff}
+.btn:hover{background:var(--accent-hover)}
+.btn:active{transform:scale(.97)}
+.btn-outline{background:transparent;color:var(--text2);border:1px solid var(--border)}
+.btn-outline:hover{background:#f5f5f5;color:var(--text)}
+.btn-sm{padding:4px 10px;font-size:12px}
+.btn-danger{background:transparent;color:var(--danger);border:1px solid var(--danger)}
+.btn-danger:hover{background:var(--danger-bg)}
+.btn-ghost{background:transparent;color:var(--text2);border:none}
+.btn-ghost:hover{background:#f5f5f5}
+.btn-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+/* ===== Toggle ===== */
+.toggle{position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0}
+.toggle input{display:none}
+.toggle .slider{position:absolute;cursor:pointer;inset:0;background:#ddd;border-radius:22px;transition:.2s}
+.toggle .slider:before{content:"";position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+.toggle input:checked+.slider{background:var(--accent)}
+.toggle input:checked+.slider:before{transform:translateX(18px)}
+
+/* ===== Modal ===== */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.25);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.modal-overlay.active{display:flex}
+.modal{background:var(--card);border-radius:20px;padding:24px 28px;max-width:480px;width:92%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.12);border:1px solid rgba(255,255,255,0.2)}
+.modal-lg{max-width:640px}
+.modal-title{font-size:18px;font-weight:500;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px}
+.form-group input,.form-group textarea,.form-group select{width:100%;box-sizing:border-box}
+.form-group .hint{font-size:11px;color:var(--text3);margin-top:2px}
+.form-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+
+/* ===== Plugin/Func Cards ===== */
+.module-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.module-card{background:var(--card);border:1px solid var(--border2);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);transition:box-shadow .15s}
+.module-card:hover{box-shadow:0 4px 16px rgba(0,0,0,0.06)}
+.module-card .module-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+.module-card .module-name{font-size:15px;font-weight:500}
+.module-card .module-ver{font-size:11px;color:var(--text3);background:#f5f5f5;padding:2px 7px;border-radius:10px}
+.module-card .module-desc{font-size:13px;color:var(--text2);margin-bottom:6px;line-height:1.5}
+.module-card .module-meta{font-size:11px;color:var(--text3);margin-bottom:10px}
+.module-card .module-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+
+/* ===== Badge ===== */
+.badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:500}
+.badge-on{background:var(--green-bg);color:var(--green)}
+.badge-off{background:#f5f5f5;color:var(--text3)}
+.badge-update{background:var(--orange-bg);color:var(--orange)}
+
+/* ===== Log Viewer ===== */
+.log-wrap{display:flex;flex-direction:column;height:calc(100vh - var(--topbar-h) - 76px);border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;background:var(--card)}
+.log-toolbar{padding:10px 16px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--card)}
+.log-toolbar select{font-size:13px;padding:6px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:#f8f8f8;cursor:pointer}
+.log-toolbar .auto-label{font-size:12px;margin-left:auto;display:flex;align-items:center;gap:5px}
+.log-body{flex:1;display:flex;overflow:hidden}
+.log-panel{width:280px;flex-shrink:0;border-right:1px solid var(--border2);overflow-y:auto;display:flex;flex-direction:column;background:#fafafa}
+.log-panel .section-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;font-size:13px;font-weight:500;cursor:pointer;user-select:none;background:var(--card);border-bottom:1px solid var(--border2);position:sticky;top:0;z-index:2}
+.log-panel .section-header:hover{background:#f5f5f5}
+.log-panel .section-header i{font-size:14px;color:var(--text3);transition:transform .2s}
+.log-panel .section-header.collapsed i{transform:rotate(-90deg)}
+.log-panel .section-body{display:flex;flex-direction:column}
+.log-panel .section-body.collapsed{display:none}
+.log-panel .group-card{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:10px;transition:background .1s;font-size:13px;background:var(--card)}
+.log-panel .group-card:hover{background:#fafafa}
+.log-panel .group-card.active{background:#f5f5f5;border-left:3px solid var(--accent);padding-left:11px}
+.log-panel .group-card .gc-avatar{width:30px;height:30px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text3);flex-shrink:0;overflow:hidden}
+.log-panel .group-card .gc-avatar img{width:100%;height:100%;object-fit:cover}
+.log-panel .group-card .gc-info{flex:1;min-width:0}
+.log-panel .group-card .gc-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log-panel .group-card .gc-meta{font-size:10px;color:var(--text3);margin-top:1px}
+.log-panel .group-card .gc-badge{font-size:10px;background:var(--accent);color:#fff;padding:1px 6px;border-radius:9px;flex-shrink:0}
+.log-panel .group-card.error{background:#fff5f5;border-left:3px solid var(--danger)}
+.log-panel .group-card.error .gc-name{color:var(--danger)}
+.log-panel .group-card.error .gc-badge{background:var(--danger)}
+.log-panel .group-card.c2c{border-left:3px solid var(--blue)}
+.log-panel .group-card.c2c .gc-badge{background:var(--blue)}
+.log-panel .empty-hint{font-size:12px;color:var(--text3);padding:20px;text-align:center}
+
+.log-messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;background:#f5f5f5}
+.log-msg-header{display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--card);font-size:14px;font-weight:500;border-bottom:1px solid var(--border2);position:sticky;top:0;z-index:2}
+.log-msg-header .back-btn{display:none;background:none;color:var(--text);font-size:18px;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center}
+.log-msg-header .back-btn:hover{background:#f5f5f5}
+.log-msg-cards{flex:1;overflow-y:auto;padding:12px}
+.log-msg-cards .empty{display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:14px;height:100%}
+
+/* Message card */
+.msg-card{background:var(--card);border:1px solid var(--border2);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:box-shadow .1s;box-shadow:var(--shadow)}
+.msg-card:hover{box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+.msg-card .msg-card-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.msg-card .msg-card-avatar{width:36px;height:36px;border-radius:50%;background:#e0e0e0;flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text3)}
+.msg-card .msg-card-avatar img{width:100%;height:100%;object-fit:cover}
+.msg-card .msg-card-meta{flex:1;min-width:0}
+.msg-card .msg-card-name{font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px}
+.msg-card .msg-card-name .bot-tag{font-size:9px;background:var(--text3);color:#fff;padding:1px 5px;border-radius:3px;line-height:1.3;font-weight:500}
+.msg-card .msg-card-time{font-size:11px;color:var(--text3)}
+.msg-card .msg-card-body{font-size:14px;line-height:1.5;color:var(--text2);word-wrap:break-word;overflow-wrap:break-word;word-break:normal}
+.msg-card .msg-card-body .mention{color:var(--blue);font-weight:500}
+.msg-card .msg-card-images{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.msg-card .msg-card-images img{max-width:120px;max-height:90px;border-radius:6px;object-fit:cover;cursor:pointer}
+.msg-card .msg-card-body.markdown{font-size:12px}
+.msg-card .msg-card-body.markdown table{font-size:11px;margin:4px 0}
+.msg-card .msg-card-body.markdown blockquote{border-left:2px solid var(--text3);padding-left:8px;color:var(--text2);margin:4px 0}
+.msg-card .msg-card-body.markdown code{background:rgba(0,0,0,0.06);padding:1px 4px;border-radius:2px;font-size:11px}
+.msg-card .msg-card-body.markdown pre{background:rgba(0,0,0,0.04);padding:6px 10px;border-radius:4px;font-size:11px;overflow-x:auto;margin:4px 0}
+
+/* Event card */
+.msg-card.event-card{text-align:center;color:var(--text2);font-size:13px;padding:8px 14px;background:var(--card);border:1px solid transparent;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;cursor:pointer}
+.msg-card.event-card:hover{border-color:var(--orange);background:#fffbf5}
+.msg-card.event-card i{color:var(--orange);font-size:14px;flex-shrink:0}
+.msg-card.event-card .event-avatar{width:22px;height:22px;border-radius:50%;background:#f0f0f0;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.msg-card.event-card .event-avatar img{width:100%;height:100%;object-fit:cover}
+.msg-card.event-card .event-name{font-weight:500;color:var(--text)}
+.msg-card.event-card .event-time{color:var(--text3);font-size:10px;margin-left:4px}
+
+/* Raw data modal */
+.raw-modal .raw-content{background:#f8f8f8;border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;font-size:12px;font-family:monospace;max-height:60vh;overflow:auto;white-space:pre-wrap;word-break:break-all;line-height:1.5;color:var(--text)}
+
+/* Log input bar */
+.log-input-bar{padding:10px 16px;border-top:1px solid var(--border2);display:flex;gap:8px;align-items:flex-end;background:var(--card)}
+.log-input-bar .input-wrap{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
+.log-input-bar textarea{width:100%;resize:none;min-height:36px;max-height:80px;border-radius:4px;padding:8px 12px;font-size:13px;line-height:1.4;border:1px solid var(--border);background:#f8f8f8;font-family:inherit}
+.log-input-bar textarea:focus{background:var(--card)}
+.log-input-bar .btn{border-radius:4px;height:36px;padding:0 14px;flex-shrink:0}
+.log-input-bar .send-type{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.log-input-bar .send-type button{font-size:11px;padding:3px 8px;border-radius:3px;background:transparent;color:var(--text3);border:1px solid var(--border);cursor:pointer;transition:all .1s}
+.log-input-bar .send-type button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.log-input-bar .send-extra{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.log-input-bar .send-extra input[type=text]{flex:1;min-width:80px;padding:5px 8px;font-size:12px;border-radius:3px}
+.log-input-bar .send-extra input[type=file]{font-size:11px;max-width:140px}
+.log-input-bar .send-extra .btn-sm{font-size:11px;padding:3px 8px;white-space:nowrap}
+
+/* Toast */
+.toast-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.25);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
+.toast-box{background:var(--card);border-radius:24px;padding:28px 36px 24px;max-width:320px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.12)}
+.toast-box .toast-icon{font-size:40px;line-height:1;margin-bottom:6px;color:var(--accent)}
+.toast-box .toast-title{font-size:18px;font-weight:500;color:var(--text);margin-bottom:4px}
+.toast-box .toast-desc{font-size:14px;color:var(--text2);margin-bottom:18px;word-break:break-all}
+.toast-box .toast-btn{background:var(--accent);color:#fff;border:none;padding:10px 28px;border-radius:30px;font-size:15px;font-weight:450;transition:background .15s}
+.toast-box .toast-btn:hover{background:var(--accent-hover)}
+
+.loading{text-align:center;padding:30px;color:var(--text3)}
+.loading i{font-size:22px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== Mobile ===== */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .sidebar-logo .menu-close{display:flex}
+  .main{margin-left:0}
+  .topbar .menu-btn{display:flex}
+  .charts-row{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .module-grid{grid-template-columns:1fr}
+  .log-wrap{position:relative}
+  .log-panel{width:100%;position:absolute;z-index:1;height:100%;display:flex;left:0;top:0;background:#fafafa}
+  .log-body{position:relative}
+  .log-messages{display:none;position:absolute;z-index:2;left:0;top:0;width:100%;height:100%;background:#f5f5f5}
+  .log-wrap.chat-open .log-panel{display:none}
+  .log-wrap.chat-open .log-messages{display:flex}
+  .log-msg-header .back-btn{display:flex}
+  .log-msg-header{padding-left:8px}
+  .msg-card:hover{box-shadow:var(--shadow)}
+  .modal{max-width:96%;padding:20px}
+  .content{padding:12px 14px}
+  .bot-selector select{max-width:100px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Sidebar ===== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">Tenor <button class="menu-close" onclick="toggleSidebar(false)"><i class="ri-close-line"></i></button></div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" data-page="dashboard"><i class="ri-dashboard-3-line"></i>仪表盘</div>
+    <div class="nav-item" data-page="bot"><i class="ri-robot-2-line"></i>Bot 管理</div>
+    <div class="nav-divider">模块</div>
+    <div class="nav-item" data-page="plugin"><i class="ri-puzzle-line"></i>插件管理</div>
+    <div class="nav-item" data-page="func"><i class="ri-code-box-line"></i>函数库</div>
+    <div class="nav-divider">系统</div>
+    <div class="nav-item" data-page="log"><i class="ri-chat-smile-2-line"></i>日志查看</div>
+    <div class="nav-item" data-page="setting"><i class="ri-settings-3-line"></i>系统设置</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div><i class="ri-user-3-line"></i> 管理员</div>
+    <button class="btn-logout" onclick="doLogout()"><i class="ri-logout-box-r-line"></i> 退出</button>
+  </div>
+</aside>
+
+<!-- ===== Main ===== -->
+<div class="main">
+  <div class="topbar">
+    <button class="menu-btn" onclick="toggleSidebar()"><i class="ri-menu-line"></i></button>
+    <span class="page-title" id="topbarTitle"><i class="ri-dashboard-3-line"></i>仪表盘</span>
+    <div class="bot-selector" id="botSelector">
+      <div class="bot-avatar" id="botAvatar"><img src="" id="botAvatarImg" style="display:none" onerror="this.style.display='none'"><i class="ri-robot-2-line" id="botAvatarIcon"></i></div>
+      <select id="botSelect" onchange="onBotChange()"><option value="">加载中...</option></select>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- Dashboard -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid" id="statsGrid"></div>
+      <div class="charts-row" id="chartsRow"></div>
+      <div id="topCharts"></div>
+      <div style="text-align:center;font-size:12px;color:var(--text3);margin-top:16px" id="sysInfoLine"></div>
+    </div>
+
+    <!-- Bot -->
+    <div class="page" id="page-bot">
+      <div class="btn-row" style="margin-bottom:14px"><button class="btn" onclick="showBotModal()"><i class="ri-add-line"></i>添加 Bot</button></div>
+      <div class="card" id="botTableWrap"><div class="loading"><i class="ri-loader-4-line"></i></div></div>
+    </div>
+
+    <!-- Plugin -->
+    <div class="page" id="page-plugin">
+      <div class="btn-row" style="margin-bottom:14px"><button class="btn" onclick="showPluginModal()"><i class="ri-add-line"></i>创建插件</button><button class="btn btn-outline" onclick="showPluginUpload()"><i class="ri-upload-2-line"></i>上传插件</button></div>
+      <div class="module-grid" id="pluginGrid"></div>
+    </div>
+
+    <!-- Func -->
+    <div class="page" id="page-func">
+      <div class="btn-row" style="margin-bottom:14px"><button class="btn" onclick="showFuncModal()"><i class="ri-add-line"></i>创建函数库</button><button class="btn btn-outline" onclick="showFuncUpload()"><i class="ri-upload-2-line"></i>上传函数库</button></div>
+      <div class="module-grid" id="funcGrid"></div>
+    </div>
+
+    <!-- Log -->
+    <div class="page" id="page-log">
+      <div class="log-wrap">
+        <div class="log-toolbar">
+          <select id="logDateSelect" onchange="onLogDateChange()"></select>
+          <button class="btn btn-sm btn-outline" onclick="downloadLog()" title="下载日志"><i class="ri-download-2-line"></i></button>
+          <button class="btn btn-sm btn-danger" onclick="deleteLogFile()" title="删除日志"><i class="ri-delete-bin-line"></i></button>
+          <div class="auto-label"><label class="toggle"><input type="checkbox" id="autoRefreshToggle" onchange="toggleAutoRefresh()"><span class="slider"></span></label>自动刷新</div>
+        </div>
+        <div class="log-body">
+          <div class="log-panel" id="logPanel">
+            <div class="section-header" onclick="toggleLogSection('group')"><span>群聊 (<span id="logGroupCount">0</span>)</span><i class="ri-arrow-down-s-line"></i></div>
+            <div class="section-body" id="logGroupSection"></div>
+            <div class="section-header" onclick="toggleLogSection('c2c')"><span>私聊 (<span id="logC2cCount">0</span>)</span><i class="ri-arrow-down-s-line"></i></div>
+            <div class="section-body" id="logC2cSection"></div>
+            <div class="section-header" onclick="toggleLogSection('error')"><span>错误日志</span><i class="ri-arrow-down-s-line"></i></div>
+            <div class="section-body" id="logErrorSection"></div>
+          </div>
+          <div class="log-messages" id="logMessagesWrap">
+            <div class="log-msg-header" id="logMsgHeader" style="display:none">
+              <button class="back-btn" onclick="showLogPanel()" title="返回列表"><i class="ri-arrow-left-line"></i></button>
+              <span id="logMsgTitle"></span>
+            </div>
+            <div class="log-msg-cards" id="logMsgCards"><div class="empty">选择左侧群聊/私聊查看消息</div></div>
+            <div class="log-input-bar" id="logInputBar" style="display:none">
+              <div class="input-wrap">
+                <div class="send-type">
+                  <button class="active" onclick="switchSendType(0,this)">文字</button>
+                  <button onclick="switchSendType(7,this)">图片</button>
+                  <button onclick="switchSendType(7,this)">视频</button>
+                  <button onclick="switchSendType(7,this)">语音</button>
+                  <button onclick="switchSendType(2,this)">Markdown</button>
+                </div>
+                <textarea id="logInput" placeholder="输入消息..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
+                <div class="send-extra" id="sendExtra" style="display:none">
+                  <input type="text" id="mediaUrl" placeholder="媒体 URL（可选）">
+                  <input type="file" id="mediaFile" accept="image/*,video/*,audio/*" onchange="document.getElementById('mediaUrl').placeholder=this.files[0]?this.files[0].name:'媒体 URL'">
+                  <button type="button" class="btn btn-sm btn-outline" onclick="uploadAndSend()">上传并发送</button>
+                </div>
+              </div>
+              <button class="btn" onclick="sendMessage()"><i class="ri-send-plane-fill"></i> 发送</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="page" id="page-setting">
+      <div class="card">
+        <div class="card-title"><i class="ri-lock-line"></i>修改管理员密码</div>
+        <form onsubmit="saveSettings(event)">
+          <div class="form-group"><label>新账号</label><input type="text" id="setAdmin" required></div>
+          <div class="form-group"><label>新密码</label><input type="password" id="setPassword" required></div>
+          <button type="submit" class="btn"><i class="ri-save-line"></i>保存</button>
+        </form>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <div class="card-title"><i class="ri-earth-line"></i>GitHub 代理</div>
+        <form onsubmit="saveProxy(event)">
+          <div class="form-group"><label>选择代理</label>
+            <select id="proxySelect" onchange="document.getElementById('proxyUrl').value=this.value">
+              <option value="">不使用代理</option>
+              <option value="https://gh-proxy.com/">gh-proxy.com</option>
+              <option value="https://gh.llkk.cc/">gh.llkk.cc</option>
+              <option value="https://gh.api.99988866.xyz/">gh.api.99988866.xyz</option>
+              <option value="https://github.moeyy.xyz/">github.moeyy.xyz</option>
+              <option value="__custom__">自定义...</option>
+            </select>
+          </div>
+          <div class="form-group"><label>自定义代理地址</label><input type="text" id="proxyUrl" placeholder="https://..."></div>
+          <button type="submit" class="btn"><i class="ri-save-line"></i>保存</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Raw Data Modal -->
+<div class="modal-overlay" id="rawModal">
+  <div class="modal modal-lg raw-modal"><div class="modal-title"><i class="ri-file-code-line"></i>原始消息数据</div>
+    <div class="raw-content" id="rawContent"></div>
+    <div class="form-actions"><button type="button" class="btn btn-outline" onclick="closeModal('rawModal')">关闭</button></div>
+  </div>
+</div>
+
+<!-- ===== Modals ===== -->
+<div class="modal-overlay" id="botModal">
+  <div class="modal"><div class="modal-title"><i class="ri-robot-2-line"></i><span id="botModalTitle">添加 Bot</span></div>
+    <form onsubmit="saveBot(event)"><input type="hidden" id="botIdOrig">
+      <div class="form-group"><label>ID</label><input type="text" id="botId" required placeholder="英文标识，如 bot_1"><div class="hint">唯一标识，创建后不可修改</div></div>
+      <div class="form-group"><label>AppID</label><input type="text" id="botAppid" required></div>
+      <div class="form-group"><label>Secret</label><input type="text" id="botSecret" required></div>
+      <div class="form-group"><label>启用</label><label class="toggle"><input type="checkbox" id="botStatus" checked><span class="slider"></span></label></div>
+      <div class="form-actions"><button type="button" class="btn btn-outline" onclick="closeModal('botModal')">取消</button><button type="submit" class="btn"><i class="ri-save-line"></i>保存</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pluginModal">
+  <div class="modal"><div class="modal-title"><i class="ri-puzzle-line"></i>创建插件</div>
+    <form onsubmit="savePlugin(event)">
+      <div class="form-group"><label>文件夹名</label><input type="text" id="pluginFolder" required><div class="hint">英文，用于命名空间</div></div>
+      <div class="form-group"><label>插件名称</label><input type="text" id="pluginName" required></div>
+      <div class="form-group"><label>作者</label><input type="text" id="pluginAuthor"></div>
+      <div class="form-group"><label>版本</label><input type="text" id="pluginVersion" value="1.0.0"></div>
+      <div class="form-group"><label>GitHub</label><input type="text" id="pluginGithub" placeholder="https://github.com/user/repo"></div>
+      <div class="form-group"><label>描述</label><textarea id="pluginDesc" rows="2"></textarea></div>
+      <div class="form-actions"><button type="button" class="btn btn-outline" onclick="closeModal('pluginModal')">取消</button><button type="submit" class="btn"><i class="ri-save-line"></i>保存</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pluginUploadModal">
+  <div class="modal"><div class="modal-title"><i class="ri-upload-2-line"></i>上传插件</div>
+    <div class="form-group"><label>上传 ZIP</label><input type="file" id="pluginFile" accept=".zip"></div>
+    <div style="text-align:center;color:var(--text3);margin:10px 0">-- 或 --</div>
+    <div class="form-group"><label>GitHub 地址</label><input type="text" id="pluginGithubUpload" placeholder="https://github.com/user/repo"></div>
+    <div class="form-group"><label>代理地址</label><input type="text" id="pluginProxyUpload" placeholder="留空使用默认代理"></div>
+    <div class="form-actions"><button type="button" class="btn btn-outline" onclick="closeModal('pluginUploadModal')">取消</button><button type="button" class="btn" onclick="uploadPlugin()"><i class="ri-check-line"></i>安装</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pluginSettingsModal">
+  <div class="modal modal-lg"><div class="modal-title"><i class="ri-settings-3-line"></i>插件设置 - <span id="pluginSettingsTitle"></span></div>
+    <form id="pluginSettingsForm" onsubmit="savePluginSettings(event)"></form>
+    <div class="form-actions"><button type="button" class="btn btn-outline" onclick="closeModal('pluginSettingsModal')">取消</button><button type="button" class="btn" onclick="document.getElementById('pluginSettingsForm').dispatchEvent(new Event('submit'))"><i class="ri-save-line"></i>保存</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pluginReadmeModal">
+  <div class="modal modal-lg"><div class="modal-title"><i class="ri-book-open-line"></i><span id="pluginReadmeTitle"></span></div>
+    <div id="pluginReadmeContent" style="font-size:13px;line-height:1.7;color:var(--text2);max-height:60vh;overflow-y:auto"></div>
+    <div class="form-actions"><button type="button" class="btn btn-outline" onclick="closeModal('pluginReadmeModal')">关闭</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="funcModal">
+  <div class="modal"><div class="modal-title"><i class="ri-code-box-line"></i>创建函数库</div>
+    <form onsubmit="saveFunc(event)">
+      <div class="form-group"><label>文件夹名</label><input type="text" id="funcFolder" required><div class="hint">英文</div></div>
+      <div class="form-group"><label>函数库名称</label><input type="text" id="funcName" required></div>
+      <div class="form-group"><label>作者</label><input type="text" id="funcAuthor"></div>
+      <div class="form-group"><label>版本</label><input type="text" id="funcVersion" value="1.0.0"></div>
+      <div class="form-group"><label>GitHub</label><input type="text" id="funcGithub" placeholder="https://github.com/user/repo"></div>
+      <div class="form-group"><label>描述</label><textarea id="funcDesc" rows="2"></textarea></div>
+      <div class="form-actions"><button type="button" class="btn btn-outline" onclick="closeModal('funcModal')">取消</button><button type="submit" class="btn"><i class="ri-save-line"></i>保存</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="funcUploadModal">
+  <div class="modal"><div class="modal-title"><i class="ri-upload-2-line"></i>上传函数库</div>
+    <div class="form-group"><label>上传 ZIP</label><input type="file" id="funcFile" accept=".zip"></div>
+    <div style="text-align:center;color:var(--text3);margin:10px 0">-- 或 --</div>
+    <div class="form-group"><label>GitHub 地址</label><input type="text" id="funcGithubUpload" placeholder="https://github.com/user/repo"></div>
+    <div class="form-group"><label>代理地址</label><input type="text" id="funcProxyUpload" placeholder="留空使用默认代理"></div>
+    <div class="form-actions"><button type="button" class="btn btn-outline" onclick="closeModal('funcUploadModal')">取消</button><button type="button" class="btn" onclick="uploadFunc()"><i class="ri-check-line"></i>安装</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="funcDetailModal">
+  <div class="modal modal-lg"><div class="modal-title"><i class="ri-book-open-line"></i><span id="funcDetailTitle"></span></div>
+    <div id="funcDetailContent" style="max-height:60vh;overflow-y:auto"></div>
+    <div class="form-actions"><button type="button" class="btn btn-outline" onclick="closeModal('funcDetailModal')">关闭</button></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-overlay" id="toastOverlay">
+  <div class="toast-box"><div class="toast-icon" id="toastIcon">&#10003;</div><div class="toast-title" id="toastTitle">提示</div><div class="toast-desc" id="toastDesc"></div><button class="toast-btn" id="toastBtn">确定</button></div>
+</div>
+
+<script>
+// ==================== Global State ====================
+const API = './core/api.php';
+let BOT_ID = '';
+
+async function api(type, data = {}) {
+  if (BOT_ID && !data.bot_id) data.bot_id = BOT_ID;
+  const fd = new FormData(); fd.append('type', type);
+  for (const [k, v] of Object.entries(data)) { if (v !== undefined && v !== null) fd.append(k, v); }
+  const res = await fetch(API, { method: 'POST', body: fd }); return res.json();
+}
+async function apiUpload(type, data, fileField, file) {
+  if (BOT_ID && !data.bot_id) data.bot_id = BOT_ID;
+  const fd = new FormData(); fd.append('type', type);
+  for (const [k, v] of Object.entries(data)) { if (v !== undefined && v !== null && v !== '') fd.append(k, v); }
+  if (file) fd.append(fileField, file);
+  const res = await fetch(API, { method: 'POST', body: fd }); return res.json();
+}
+
+// ==================== Bot Selector ====================
+async function loadBotSelector() {
+  const res = await fetch(API, { method: 'POST', body: (() => { const fd = new FormData(); fd.append('type', 'botList'); return fd; })() });
+  const data = await res.json();
+  const sel = document.getElementById('botSelect');
+  if (data.code !== 200 || !data.data.length) { sel.innerHTML = '<option value="">无Bot</option>'; return; }
+  const bots = data.data;
+  sel.innerHTML = bots.map(b => `<option value="${b.id}">${b.appid.substring(0,10)}...</option>`).join('');
+  // 默认选第一个启用或第一个
+  const active = bots.find(b => b.status) || bots[0];
+  sel.value = active.id;
+  BOT_ID = active.id;
+  await onBotChange();
+}
+
+async function onBotChange() {
+  BOT_ID = document.getElementById('botSelect').value;
+  if (!BOT_ID) return;
+  // 获取 bot 头像昵称
+  try {
+    const res = await api('botInfo', { bot_id: BOT_ID });
+    if (res.code === 200) {
+      const img = document.getElementById('botAvatarImg');
+      const icon = document.getElementById('botAvatarIcon');
+      if (res.data.avatar) { img.src = res.data.avatar; img.style.display = ''; icon.style.display = 'none'; }
+      else { img.style.display = 'none'; icon.style.display = ''; }
+    }
+  } catch(e) {}
+  // 刷新当前页面
+  const page = document.querySelector('.page.active');
+  if (page) {
+    const id = page.id.replace('page-','');
+    switch (id) {
+      case 'dashboard': loadDashboard(); break;
+      case 'plugin': loadPlugins(); break;
+      case 'func': loadFuncs(); break;
+      case 'log': initLogViewer(); break;
+    }
+  }
+}
+
+// ==================== Toast ====================
+function showToast(title, desc, btnText, cb) {
+  document.getElementById('toastTitle').textContent = title || '提示';
+  document.getElementById('toastDesc').textContent = desc || '';
+  document.getElementById('toastBtn').textContent = btnText || '确定';
+  const o = document.getElementById('toastOverlay'); o.style.display = 'flex';
+  const b = document.getElementById('toastBtn'), nb = b.cloneNode(true);
+  b.parentNode.replaceChild(nb, b);
+  nb.addEventListener('click', () => { o.style.display = 'none'; if (cb) cb(); });
+  o.onclick = e => { if (e.target === o) { o.style.display = 'none'; if (cb) cb(); } };
+}
+
+// ==================== Navigation ====================
+const P = {dashboard:{title:'仪表盘',icon:'ri-dashboard-3-line'},bot:{title:'Bot 管理',icon:'ri-robot-2-line'},plugin:{title:'插件管理',icon:'ri-puzzle-line'},func:{title:'函数库',icon:'ri-code-box-line'},log:{title:'日志查看',icon:'ri-chat-smile-2-line'},setting:{title:'系统设置',icon:'ri-settings-3-line'}};
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelector(`.nav-item[data-page="${page}"]`).classList.add('active');
+  const info = P[page];
+  document.getElementById('topbarTitle').innerHTML = `<i class="${info.icon}"></i>${info.title}`;
+  if (page !== 'log') { clearInterval(LS.refreshTimer); clearInterval(LS.groupTimer); LS.autoRefresh = false; }
+  toggleSidebar(false);
+  switch (page) { case 'dashboard': loadDashboard(); break; case 'bot': loadBots(); break; case 'plugin': loadPlugins(); break; case 'func': loadFuncs(); break; case 'log': initLogViewer(); break; case 'setting': loadSettings(); break; }
+}
+document.querySelectorAll('.nav-item').forEach(i => i.addEventListener('click', () => navigate(i.dataset.page)));
+
+function toggleSidebar(force) {
+  const s = document.getElementById('sidebar');
+  if (typeof force === 'boolean') s.classList.toggle('open', force);
+  else s.classList.toggle('open');
+}
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+// ==================== Dashboard ====================
+async function loadDashboard() {
+  const res = await api('dashboard');
+  if (res.code !== 200) return;
+  const d = res.data;
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Bot 总数</div><div class="stat-value">${d.botCount}</div><div class="stat-sub">${d.botActive} 运行中</div></div>
+    <div class="stat-card"><div class="stat-label">插件 / 函数库</div><div class="stat-value">${d.pluginCount} / ${d.funcCount}</div></div>
+    <div class="stat-card"><div class="stat-label">今日群聊消息</div><div class="stat-value">${d.groupMsgCount}</div><div class="stat-sub">${d.groupCount} 个群 · ${d.userCount} 个用户</div></div>
+    <div class="stat-card"><div class="stat-label">今日私聊消息</div><div class="stat-value">${d.c2cMsgCount}</div><div class="stat-sub">${d.eventCount||0} 个事件</div></div>
+  `;
+
+  // 折线图
+  const maxH = Math.max(1, ...d.hourlyData);
+  const svgH = 200, pad = { top: 16, right: 16, bottom: 28, left: 42 };
+  const w = 400, h = svgH;
+  const plotW = w - pad.left - pad.right, plotH = h - pad.top - pad.bottom;
+  const ySteps = 5, yMax = Math.ceil(maxH / 10) * 10 || 10;
+  let yLabels = '', yGridLines = '';
+  for (let i = 0; i <= ySteps; i++) {
+    const val = Math.round(yMax * i / ySteps);
+    const y = pad.top + plotH - (plotH * i / ySteps);
+    yLabels += `<text x="${pad.left - 6}" y="${y + 4}" text-anchor="end" font-size="10" fill="#999">${val}</text>`;
+    if (i < ySteps) yGridLines += `<line x1="${pad.left}" y1="${y}" x2="${w - pad.right}" y2="${y}" stroke="#eee" stroke-width="0.5"/>`;
+  }
+  let xLabels = '';
+  [0, 3, 6, 9, 12, 15, 18, 21, 23].forEach(hour => {
+    const x = pad.left + (hour / 23) * plotW;
+    xLabels += `<text x="${x}" y="${h - 4}" text-anchor="middle" font-size="10" fill="#999">${hour}h</text>`;
+  });
+  const areaPoints = d.hourlyData.map((v, i) => {
+    const x = pad.left + (i / 23) * plotW;
+    const y = pad.top + plotH - (v / yMax) * plotH;
+    return `${x},${y}`;
+  });
+  const linePath = areaPoints.join(' ');
+  const areaPath = `M${pad.left},${pad.top + plotH} L${linePath} L${pad.left + plotW},${pad.top + plotH} Z`;
+  const dots = d.hourlyData.map((v, i) => {
+    const x = pad.left + (i / 23) * plotW;
+    const y = pad.top + plotH - (v / yMax) * plotH;
+    return v > 0 ? `<circle cx="${x}" cy="${y}" r="2.5" fill="#1a1a1a"><title>${i}:00 — ${v}条</title></circle>` : '';
+  }).join('');
+
+  document.getElementById('chartsRow').innerHTML = `
+    <div class="chart-box" style="grid-column:1/-1"><div class="chart-title">今日消息时段分布</div>
+      <svg viewBox="0 0 ${w} ${svgH}" style="width:100%">
+        <defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a1a1a" stop-opacity="0.1"/><stop offset="100%" stop-color="#1a1a1a" stop-opacity="0"/></linearGradient></defs>
+        ${yGridLines}${yLabels}${xLabels}
+        <path d="${areaPath}" fill="url(#lg)"/>
+        <polyline points="${linePath}" fill="none" stroke="#1a1a1a" stroke-width="1.5" vector-effect="non-scaling-stroke"/>
+        ${dots}
+        <line x1="${pad.left}" y1="${pad.top}" x2="${pad.left}" y2="${pad.top + plotH}" stroke="#ddd" stroke-width="1"/>
+        <line x1="${pad.left}" y1="${pad.top + plotH}" x2="${w - pad.right}" y2="${pad.top + plotH}" stroke="#ddd" stroke-width="1"/>
+      </svg>
+    </div>
+  `;
+
+  // Top 5
+  document.getElementById('topCharts').innerHTML = `
+    <div class="charts-row">
+      <div class="chart-box" style="border:1px solid var(--border2);padding:0">
+        <div class="chart-title" style="padding:16px 16px 10px">群聊使用排行 Top5</div>
+        ${d.topGroups.length ? d.topGroups.map((g,i) => `<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;cursor:pointer;border-top:1px solid var(--border2);transition:background .1s" onclick="showToast('群聊ID','${esc(g.id)}','确定')" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''"><span style="color:var(--text3);width:22px;font-weight:500;flex-shrink:0;text-align:center">${i+1}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${esc(g.id.substring(0,20))}...</span><span style="font-weight:500;flex-shrink:0;color:var(--text2)">${g.count} 条</span></div>`).join('') : '<div style="color:var(--text3);font-size:13px;padding:16px;border-top:1px solid var(--border2)">暂无数据</div>'}
+      </div>
+      <div class="chart-box" style="border:1px solid var(--border2);padding:0">
+        <div class="chart-title" style="padding:16px 16px 10px">用户使用排行 Top5</div>
+        ${d.topUsers.length ? d.topUsers.map((u,i) => `<div style="display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13px;cursor:pointer;border-top:1px solid var(--border2);transition:background .1s" onclick="showToast('用户ID','${esc(u.id)}','确定')" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''"><span style="color:var(--text3);width:22px;font-weight:500;flex-shrink:0;text-align:center">${i+1}</span><img src="https://q.qlogo.cn/qqapp/102084996/${u.id}/640" style="width:28px;height:28px;border-radius:50%;flex-shrink:0" onerror="this.style.display='none'"><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">${esc(u.name||u.id.substring(0,16)+'...')}</span><span style="font-weight:500;flex-shrink:0;color:var(--text2)">${u.count} 条</span></div>`).join('') : '<div style="color:var(--text3);font-size:13px;padding:16px;border-top:1px solid var(--border2)">暂无数据</div>'}
+      </div>
+    </div>
+  `;
+
+  const s = d.system;
+  document.getElementById('sysInfoLine').innerHTML = `PHP ${esc(s.php)} · ${esc(s.os)} · ${esc(s.hostname||'')}`;
+}
+
+// ==================== Bot ====================
+async function loadBots() {
+  const res = await api('botList');
+  const w = document.getElementById('botTableWrap');
+  if (res.code !== 200) { w.innerHTML = '<div class="loading">加载失败</div>'; return; }
+  const bots = res.data;
+  if (!bots.length) { w.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3)">暂无 Bot</div>'; return; }
+  w.innerHTML = `<div class="table-wrap"><table><thead><tr><th>ID</th><th>AppID</th><th>Secret</th><th>状态</th><th>操作</th></tr></thead><tbody>${bots.map(b => `<tr>
+    <td>${esc(b.id)}</td><td>${esc(b.appid)}</td><td>${esc((b.secret||'').substring(0,8))}...</td>
+    <td><span class="badge ${b.status?'badge-on':'badge-off'}">${b.status?'运行中':'已停用'}</span></td>
+    <td><div class="btn-row">
+      <button class="btn btn-sm btn-outline" onclick="editBot('${esc(b.id)}','${esc(b.appid)}','${esc(b.secret)}',${b.status})"><i class="ri-edit-line"></i></button>
+      <button class="btn btn-sm btn-outline" onclick="toggleBot('${esc(b.id)}',${!b.status})">${b.status?'<i class="ri-pause-line"></i>':'<i class="ri-play-line"></i>'}</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteBot('${esc(b.id)}')"><i class="ri-delete-bin-line"></i></button></div></td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function showBotModal() { document.getElementById('botModalTitle').textContent = '添加 Bot'; document.getElementById('botIdOrig').value = ''; document.getElementById('botId').value = ''; document.getElementById('botId').disabled = false; document.getElementById('botAppid').value = ''; document.getElementById('botSecret').value = ''; document.getElementById('botStatus').checked = true; openModal('botModal'); }
+function editBot(id, appid, secret, status) { document.getElementById('botModalTitle').textContent = '编辑 Bot'; document.getElementById('botIdOrig').value = id; document.getElementById('botId').value = id; document.getElementById('botId').disabled = true; document.getElementById('botAppid').value = appid; document.getElementById('botSecret').value = secret; document.getElementById('botStatus').checked = status; openModal('botModal'); }
+async function saveBot(e) { e.preventDefault(); const id = document.getElementById('botId').value; const origId = document.getElementById('botIdOrig').value; const res = await api('botSave', { id: origId || id, newId: origId ? '' : id, appid: document.getElementById('botAppid').value, secret: document.getElementById('botSecret').value, status: document.getElementById('botStatus').checked ? '1' : '0' }); if (res.code === 200) { closeModal('botModal'); loadBots(); loadBotSelector(); showToast('成功', res.msg, '确定'); } else showToast('错误', res.msg, '确定'); }
+async function toggleBot(id, status) { const res = await api('botToggle', { id, status: status ? '1' : '0' }); if (res.code === 200) { loadBots(); loadBotSelector(); } else showToast('错误', res.msg, '确定'); }
+async function deleteBot(id) { showToast('确认', '确定删除此 Bot？', '删除', async () => { const res = await api('botDelete', { id }); if (res.code === 200) { loadBots(); loadBotSelector(); } else showToast('错误', res.msg, '确定'); }); }
+
+// ==================== Plugin ====================
+async function loadPlugins() {
+  const res = await api('pluginList');
+  const g = document.getElementById('pluginGrid');
+  if (res.code !== 200) { g.innerHTML = '<div class="loading">加载失败</div>'; return; }
+  if (!res.data.length) { g.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);grid-column:1/-1">暂无插件</div>'; return; }
+  g.innerHTML = res.data.map(p => `<div class="module-card">
+    <div class="module-header"><span class="module-name">${esc(p.name)}</span><span class="module-ver">v${esc(p.version||'?')}</span></div>
+    <div class="module-desc">${esc(p.desc||'暂无描述')}</div>
+    <div class="module-meta">${esc(p.author||'')} · ${esc(p.folder)}</div>
+    <div class="module-actions">
+      <label class="toggle"><input type="checkbox" ${p.status?'checked':''} onchange="togglePlugin('${esc(p.folder)}',this.checked)"><span class="slider"></span></label>
+      <span class="badge ${p.status?'badge-on':'badge-off'}">${p.status?'启用':'禁用'}</span>
+      ${p.github?`<button class="btn btn-sm btn-outline" onclick="checkModuleUpdate('plugin','${esc(p.folder)}')" title="检查更新"><i class="ri-refresh-line"></i></button>`:''}
+      ${p.hasBackend?`<button class="btn btn-sm btn-outline" onclick="openPluginSettings('${esc(p.folder)}','${esc(p.name)}')" title="设置"><i class="ri-settings-3-line"></i></button>`:''}
+      ${p.hasReadme?`<button class="btn btn-sm btn-outline" onclick="openPluginReadme('${esc(p.folder)}','${esc(p.name)}')" title="文档"><i class="ri-book-open-line"></i></button>`:''}
+      <button class="btn btn-sm btn-danger" onclick="deletePlugin('${esc(p.folder)}')"><i class="ri-delete-bin-line"></i></button>
+    </div>
+  </div>`).join('');
+}
+async function togglePlugin(folder, status) { const res = await api('pluginToggle', { folder, status: status ? '1' : '0' }); if (res.code !== 200) { showToast('错误', res.msg, '确定'); loadPlugins(); } }
+function showPluginModal() { document.getElementById('pluginFolder').value = ''; document.getElementById('pluginName').value = ''; document.getElementById('pluginAuthor').value = ''; document.getElementById('pluginVersion').value = '1.0.0'; document.getElementById('pluginGithub').value = ''; document.getElementById('pluginDesc').value = ''; openModal('pluginModal'); }
+async function savePlugin(e) { e.preventDefault(); const res = await api('pluginSave', { folder: document.getElementById('pluginFolder').value, name: document.getElementById('pluginName').value, author: document.getElementById('pluginAuthor').value, version: document.getElementById('pluginVersion').value, github: document.getElementById('pluginGithub').value, desc: document.getElementById('pluginDesc').value }); if (res.code === 200) { closeModal('pluginModal'); loadPlugins(); showToast('成功', res.msg, '确定'); } else showToast('错误', res.msg, '确定'); }
+async function deletePlugin(folder) { showToast('确认', '确定删除此插件？', '删除', async () => { const res = await api('pluginDelete', { folder }); if (res.code === 200) loadPlugins(); else showToast('错误', res.msg, '确定'); }); }
+function showPluginUpload() { openModal('pluginUploadModal'); }
+async function uploadPlugin() { const github = document.getElementById('pluginGithubUpload').value; const proxy = document.getElementById('pluginProxyUpload').value; const file = document.getElementById('pluginFile').files[0]; if (!github && !file) { showToast('提示', '请选择文件或输入 GitHub 地址', '确定'); return; } const res = await apiUpload('pluginUpload', { github, proxy }, 'file', file); if (res.code === 200) { closeModal('pluginUploadModal'); loadPlugins(); showToast('成功', res.msg, '确定'); } else showToast('错误', res.msg, '确定'); }
+
+// ==================== Plugin Settings ====================
+let currentPluginFolder = '';
+async function openPluginSettings(folder, name) { currentPluginFolder = folder; document.getElementById('pluginSettingsTitle').textContent = name; const res = await api('pluginSettings', { folder }); if (res.code !== 200) { showToast('错误', res.msg, '确定'); return; } document.getElementById('pluginSettingsForm').innerHTML = buildSettingsForm(res.data); openModal('pluginSettingsModal'); }
+function buildSettingsForm(data, prefix = '') { let html = ''; for (const [key, item] of Object.entries(data)) { const name = prefix ? `${prefix}[${key}]` : key; const desc = item.desc || key; if (item.type === 'list' && item.items) { html += `<div style="margin-bottom:12px;padding:10px;border:1px solid var(--border2);border-radius:var(--radius-sm)"><div style="font-size:13px;font-weight:500;margin-bottom:6px">${esc(desc)}</div>`; html += buildSettingsForm(item.items, name); html += '</div>'; } else if (item.type === 'bool') { html += `<div class="form-group" style="display:flex;align-items:center;justify-content:space-between"><div><label>${esc(desc)}</label>${item.hint?`<div class="hint">${esc(item.hint)}</div>`:''}</div><label class="toggle"><input type="checkbox" name="${name}" ${item.value?'checked':''}><span class="slider"></span></label></div>`; } else if (item.type === 'int') { html += `<div class="form-group"><label>${esc(desc)}</label><input type="number" name="${name}" value="${item.value??''}" ${item.hint?`placeholder="${esc(item.hint)}"`:''}></div>`; } else { html += `<div class="form-group"><label>${esc(desc)}</label><input type="text" name="${name}" value="${esc(item.value??'')}" ${item.hint?`placeholder="${esc(item.hint)}"`:''}></div>`; } } return html; }
+async function savePluginSettings(e) { e.preventDefault(); const form = document.getElementById('pluginSettingsForm'); const values = {}; form.querySelectorAll('input[name]').forEach(inp => { let v; if (inp.type === 'checkbox') v = inp.checked; else if (inp.type === 'number') v = parseInt(inp.value) || 0; else v = inp.value; const m = inp.name.match(/^(.+?)\[(.+?)\]$/); if (m) { if (!values[m[1]]) values[m[1]] = {}; values[m[1]][m[2]] = v; } else values[inp.name] = v; }); const res = await api('pluginSettings', { folder: currentPluginFolder, values: JSON.stringify(values) }); if (res.code === 200) { closeModal('pluginSettingsModal'); showToast('成功', res.msg, '确定'); } else showToast('错误', res.msg, '确定'); }
+
+// ==================== Plugin Readme ====================
+async function openPluginReadme(folder, name) { document.getElementById('pluginReadmeTitle').textContent = name + ' 文档'; const res = await api('pluginReadme', { folder }); if (res.code !== 200) { showToast('错误', res.msg, '确定'); return; } document.getElementById('pluginReadmeContent').innerHTML = renderMD(res.data.content); openModal('pluginReadmeModal'); }
+function renderMD(md) { return md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/^### (.+)$/gm,'<h3 style="font-size:15px;margin:14px 0 6px">$1</h3>').replace(/^## (.+)$/gm,'<h2 style="font-size:17px;margin:18px 0 8px">$1</h2>').replace(/^# (.+)$/gm,'<h1 style="font-size:20px;margin:22px 0 10px">$1</h1>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\*(.+?)\*/g,'<i>$1</i>').replace(/`([^`]+)`/g,'<code style="background:#f5f5f5;padding:1px 5px;border-radius:3px;font-size:12px">$1</code>').replace(/---/g,'<hr style="border:none;border-top:1px solid var(--border2);margin:14px 0">').replace(/\n/g,'<br>'); }
+
+// ==================== Check Update ====================
+async function checkModuleUpdate(utype, folder) {
+  showToast('检查更新', '正在获取远程版本...', '确定');
+  const res = await api('checkUpdate', { updateType: utype, folder });
+  if (res.code !== 200) { showToast('检查失败', res.msg, '确定'); return; }
+  const d = res.data;
+  if (d.hasUpdate) {
+    showToast('发现新版本', `本地: v${d.localVer} → 远程: v${d.remoteVer}`, '前往更新', () => { window.open('https://github.com/' + (d.remoteName || ''), '_blank'); });
+  } else {
+    showToast('已是最新', `当前版本 v${d.localVer}`, '确定');
+  }
+}
+
+// ==================== Func ====================
+async function loadFuncs() {
+  const res = await api('funcList');
+  const g = document.getElementById('funcGrid');
+  if (res.code !== 200) { g.innerHTML = '<div class="loading">加载失败</div>'; return; }
+  if (!res.data.length) { g.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);grid-column:1/-1">暂无函数库</div>'; return; }
+  g.innerHTML = res.data.map(f => `<div class="module-card">
+    <div class="module-header"><span class="module-name">${esc(f.name)}</span><span class="module-ver">v${esc(f.version||'?')}</span></div>
+    <div class="module-desc">${esc(f.desc||'暂无描述')}</div>
+    <div class="module-meta">${esc(f.author||'')} · ${esc(f.folder)}</div>
+    <div class="module-actions">
+      <label class="toggle"><input type="checkbox" ${f.status?'checked':''} onchange="toggleFunc('${esc(f.folder)}',this.checked)"><span class="slider"></span></label>
+      <span class="badge ${f.status?'badge-on':'badge-off'}">${f.status?'启用':'禁用'}</span>
+      ${f.github?`<button class="btn btn-sm btn-outline" onclick="checkModuleUpdate('func','${esc(f.folder)}')" title="检查更新"><i class="ri-refresh-line"></i></button>`:''}
+      ${f.hasFunc?`<button class="btn btn-sm btn-outline" onclick="openFuncDetail('${esc(f.folder)}','${esc(f.name)}')"><i class="ri-book-open-line"></i> 文档</button>`:''}
+      <button class="btn btn-sm btn-danger" onclick="deleteFunc('${esc(f.folder)}')"><i class="ri-delete-bin-line"></i></button>
+    </div>
+  </div>`).join('');
+}
+async function toggleFunc(folder, status) { const res = await api('funcToggle', { folder, status: status ? '1' : '0' }); if (res.code !== 200) { showToast('错误', res.msg, '确定'); loadFuncs(); } }
+function showFuncModal() { document.getElementById('funcFolder').value = ''; document.getElementById('funcName').value = ''; document.getElementById('funcAuthor').value = ''; document.getElementById('funcVersion').value = '1.0.0'; document.getElementById('funcGithub').value = ''; document.getElementById('funcDesc').value = ''; openModal('funcModal'); }
+async function saveFunc(e) { e.preventDefault(); const res = await api('funcSave', { folder: document.getElementById('funcFolder').value, name: document.getElementById('funcName').value, author: document.getElementById('funcAuthor').value, version: document.getElementById('funcVersion').value, github: document.getElementById('funcGithub').value, desc: document.getElementById('funcDesc').value }); if (res.code === 200) { closeModal('funcModal'); loadFuncs(); showToast('成功', res.msg, '确定'); } else showToast('错误', res.msg, '确定'); }
+async function deleteFunc(folder) { showToast('确认', '确定删除此函数库？', '删除', async () => { const res = await api('funcDelete', { folder }); if (res.code === 200) loadFuncs(); else showToast('错误', res.msg, '确定'); }); }
+function showFuncUpload() { openModal('funcUploadModal'); }
+async function uploadFunc() { const github = document.getElementById('funcGithubUpload').value; const proxy = document.getElementById('funcProxyUpload').value; const file = document.getElementById('funcFile').files[0]; if (!github && !file) { showToast('提示', '请选择文件或输入 GitHub 地址', '确定'); return; } const res = await apiUpload('funcUpload', { github, proxy }, 'file', file); if (res.code === 200) { closeModal('funcUploadModal'); loadFuncs(); showToast('成功', res.msg, '确定'); } else showToast('错误', res.msg, '确定'); }
+
+async function openFuncDetail(folder, name) {
+  document.getElementById('funcDetailTitle').textContent = name + ' 文档';
+  const res = await api('funcDetail', { folder });
+  if (res.code !== 200) { showToast('错误', res.msg, '确定'); return; }
+  const d = res.data;
+  let html = '';
+  if (d.desc) html += `<p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6">${esc(d.desc)}</p>`;
+  if (d.list && Array.isArray(d.list) && d.list.length) {
+    html += '<div class="table-wrap"><table><thead><tr><th>函数名</th><th>介绍</th></tr></thead><tbody>';
+    d.list.forEach(item => {
+      if (typeof item === 'object' && item !== null) {
+        for (const [fn, desc] of Object.entries(item)) {
+          html += `<tr><td><code style="background:#f5f5f5;padding:2px 7px;border-radius:4px;font-size:12px">${esc(fn)}</code></td><td>${esc(desc)}</td></tr>`;
+        }
+      }
+    });
+    html += '</tbody></table></div>';
+  } else {
+    html += '<div style="color:var(--text3);font-size:13px;padding:10px">暂无函数列表</div>';
+  }
+  document.getElementById('funcDetailContent').innerHTML = html;
+  openModal('funcDetailModal');
+}
+
+// ==================== Log Viewer ====================
+let LS = { currentGroup: null, currentType: 'group', currentC2c: null, autoRefresh: false, refreshTimer: null, groupTimer: null, groups: [], c2cUsers: [], c2cCount: 0, hasError: false, messages: [], total: 0, userScrolled: false, date: '', sendType: 0, sendFileType: 1 };
+
+async function initLogViewer() {
+  if (window.innerWidth <= 768) document.querySelector('.log-wrap').classList.remove('chat-open');
+  const sel = document.getElementById('logDateSelect');
+  const today = new Date();
+  sel.innerHTML = '';
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const val = d.toISOString().split('T')[0];
+    const opt = document.createElement('option'); opt.value = val; opt.textContent = val;
+    if (i === 0) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  LS.date = sel.value;
+  await loadLogGroups();
+}
+
+function onLogDateChange() {
+  LS.date = document.getElementById('logDateSelect').value;
+  LS.currentGroup = null; LS.currentC2c = null; LS.currentType = 'group';
+  document.getElementById('logMsgHeader').style.display = 'none';
+  document.getElementById('logMsgCards').innerHTML = '<div class="empty">选择左侧群聊/私聊查看消息</div>';
+  document.getElementById('logInputBar').style.display = 'none';
+  if (window.innerWidth <= 768) document.querySelector('.log-wrap').classList.remove('chat-open');
+  loadLogGroups();
+}
+
+async function loadLogGroups() {
+  const res = await api('logGroups', { date: LS.date });
+  const gs = document.getElementById('logGroupSection');
+  const cs = document.getElementById('logC2cSection');
+  const es = document.getElementById('logErrorSection');
+  document.getElementById('logGroupCount').textContent = '0';
+  document.getElementById('logC2cCount').textContent = '0';
+
+  if (res.code !== 200) {
+    gs.innerHTML = '<div class="empty-hint">加载失败</div>';
+    cs.innerHTML = '<div class="empty-hint">加载失败</div>';
+    es.innerHTML = '';
+    return;
+  }
+
+  const { groups, c2cUsers, c2cCount, hasError } = res.data;
+  LS.groups = groups; LS.c2cUsers = c2cUsers; LS.c2cCount = c2cCount; LS.hasError = hasError;
+
+  document.getElementById('logGroupCount').textContent = groups.length;
+  document.getElementById('logC2cCount').textContent = c2cUsers.length;
+
+  // 群聊
+  if (groups.length) {
+    gs.innerHTML = groups.map(g => {
+      const active = LS.currentGroup === g.group_id && LS.currentType === 'group';
+      return `<div class="group-card ${active?'active':''}" onclick="selectLogGroup('${g.group_id}','group')">
+        <div class="gc-avatar"><i class="ri-group-line"></i></div>
+        <div class="gc-info"><div class="gc-name">${esc(g.group_name)}</div><div class="gc-meta">${esc(g.last_time||'')}</div></div>
+        <div class="gc-badge">${g.message_count}</div>
+      </div>`;
+    }).join('');
+  } else { gs.innerHTML = '<div class="empty-hint">暂无群聊日志</div>'; }
+
+  // 私聊
+  if (c2cUsers.length) {
+    cs.innerHTML = c2cUsers.map(u => {
+      const active = LS.currentType === 'c2c' && LS.currentC2c === u.user_id;
+      return `<div class="group-card c2c ${active?'active':''}" onclick="selectLogGroup('${u.user_id}','c2c')">
+        <div class="gc-avatar"><img src="https://q.qlogo.cn/qqapp/102084996/${u.user_id}/640" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\\'ri-user-3-line\\'></i>'"></div>
+        <div class="gc-info"><div class="gc-name">${esc(u.user_name)}</div><div class="gc-meta">${esc(u.last_time||'')}</div></div>
+        <div class="gc-badge">${u.message_count}</div>
+      </div>`;
+    }).join('');
+  } else { cs.innerHTML = '<div class="empty-hint">暂无私聊日志</div>'; }
+
+  // 错误日志
+  if (hasError) {
+    const active = LS.currentType === 'error';
+    es.innerHTML = `<div class="group-card error ${active?'active':''}" onclick="selectLogGroup(null,'error')">
+      <div class="gc-avatar" style="background:#fff5f5;color:var(--danger)"><i class="ri-error-warning-line"></i></div>
+      <div class="gc-info"><div class="gc-name">错误日志</div><div class="gc-meta">系统异常</div></div>
+    </div>`;
+  } else { es.innerHTML = ''; }
+
+  if (LS.currentGroup || LS.currentC2c || LS.currentType === 'error') await loadLogMessages(false);
+}
+
+function toggleLogSection(type) {
+  const h = document.querySelector(`.section-header[onclick*="${type}"]`);
+  const b = document.getElementById(type === 'group' ? 'logGroupSection' : type === 'c2c' ? 'logC2cSection' : 'logErrorSection');
+  if (h && b) { h.classList.toggle('collapsed'); b.classList.toggle('collapsed'); }
+}
+
+function selectLogGroup(id, type) {
+  LS.currentGroup = (type === 'group') ? id : null;
+  LS.currentC2c = (type === 'c2c') ? id : null;
+  LS.currentType = type;
+  LS.messages = []; LS.total = 0; LS.userScrolled = false;
+
+  let title = '', showInput = false;
+  if (type === 'error') title = '错误日志';
+  else if (type === 'c2c') { title = '私聊 ' + (id || '').substring(0, 16) + '...'; showInput = true; }
+  else { title = '群聊 ' + (id || '').substring(0, 16) + '...'; showInput = true; }
+
+  document.getElementById('logMsgHeader').style.display = 'flex';
+  document.getElementById('logMsgTitle').textContent = title;
+  document.getElementById('logInputBar').style.display = showInput ? 'flex' : 'none';
+  document.getElementById('logMsgCards').innerHTML = '<div class="loading"><i class="ri-loader-4-line"></i></div>';
+
+  // 移动端：切换到聊天视图
+  if (window.innerWidth <= 768) document.querySelector('.log-wrap').classList.add('chat-open');
+  loadLogMessages(true);
+  loadLogGroups();
+}
+
+function showLogPanel() {
+  LS.currentGroup = null; LS.currentC2c = null; LS.currentType = 'group';
+  document.getElementById('logMsgHeader').style.display = 'none';
+  document.getElementById('logMsgCards').innerHTML = '<div class="empty">选择左侧群聊/私聊查看消息</div>';
+  document.getElementById('logInputBar').style.display = 'none';
+  // 移动端：回到列表视图
+  if (window.innerWidth <= 768) document.querySelector('.log-wrap').classList.remove('chat-open');
+  loadLogGroups();
+}
+
+async function loadLogMessages(reset) {
+  const cards = document.getElementById('logMsgCards');
+  if (reset) { cards.innerHTML = '<div class="loading"><i class="ri-loader-4-line"></i></div>'; LS.messages = []; LS._raw = []; LS.total = 0; }
+
+  const params = { date: LS.date, offset: reset ? 0 : LS.messages.length, limit: 50 };
+  if (LS.currentType === 'group') { params.logType = 'message'; params.group_id = LS.currentGroup || ''; }
+  else if (LS.currentType === 'c2c') { params.logType = 'c2c'; params.c2c_user = LS.currentC2c || ''; }
+  else { params.logType = 'error'; }
+
+  const res = await api('logList', params);
+  if (res.code !== 200) { cards.innerHTML = '<div class="empty">加载失败</div>'; return; }
+
+  LS.total = res.data.total;
+  if (reset) {
+    LS.messages = res.data.messages;
+    renderLogCards();
+    scrollLogCardsToBottom();
+  } else {
+    const existingKeys = new Set(LS.messages.map(m => m.msg_id || m.time));
+    const newMsgs = res.data.messages.filter(m => { const k = m.msg_id || m.time; return !existingKeys.has(k); });
+    if (newMsgs.length > 0) { LS.messages = [...LS.messages, ...newMsgs]; appendLogCards(newMsgs); if (!LS.userScrolled) scrollLogCardsToBottom(); }
+  }
+}
+
+function renderLogCards() {
+  const c = document.getElementById('logMsgCards');
+  if (!LS.messages.length) { c.innerHTML = '<div class="empty">暂无消息</div>'; return; }
+  LS._raw = [];
+  const frag = document.createDocumentFragment();
+  LS.messages.forEach((m, i) => {
+    LS._raw[i] = m.raw || '';
+    const div = document.createElement('div');
+    div.innerHTML = buildMsgCard(m, i);
+    frag.appendChild(div.firstElementChild);
+  });
+  c.innerHTML = '';
+  c.appendChild(frag);
+}
+
+function appendLogCards(newMsgs) {
+  const c = document.getElementById('logMsgCards');
+  if (c.querySelector('.empty')) c.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  const base = LS.messages.length - newMsgs.length;
+  newMsgs.forEach((m, idx) => {
+    const i = base + idx;
+    LS._raw[i] = m.raw || '';
+    const div = document.createElement('div');
+    div.innerHTML = buildMsgCard(m, i);
+    frag.appendChild(div.firstElementChild);
+  });
+  c.appendChild(frag);
+}
+
+function buildMsgCard(m, idx) {
+  const ri = idx != null ? idx : LS._raw.length;
+  const rawClick = `onclick="showRawByIndex(${ri})"`;
+
+  if (m.type === 'error') return `<div class="msg-card" style="background:#fff5f5;border-color:#ffccc7" ${rawClick}><div class="msg-card-head"><div class="msg-card-avatar" style="color:var(--danger)"><i class="ri-error-warning-line"></i></div><div class="msg-card-meta"><div class="msg-card-name" style="color:var(--danger)">${esc(m.msg||'错误')}</div></div></div><div class="msg-card-body" style="color:var(--danger)">${esc(m.error||'')}</div></div>`;
+
+  // 事件卡片
+  if (m.type === 'member_add' || m.type === 'member_remove') {
+    const avatarUrl = m.member_id ? `https://q.qlogo.cn/qqapp/102084996/${m.member_id}/640` : '';
+    const label = m.type === 'member_add' ? '加入本群' : '离开本群';
+    return `<div class="msg-card event-card" ${rawClick}>
+      <div class="event-avatar">${avatarUrl?`<img src="${avatarUrl}" loading="lazy" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\\'ri-user-3-line\\'></i>'">`:''}</div>
+      <span class="event-name">${esc(m.member_name||(m.member_id||'').substring(0,12))}</span> ${label} <span class="event-time">${timeLabel(m.time)}</span>
+    </div>`;
+  }
+  if (m.type === 'robot_add') return `<div class="msg-card event-card" ${rawClick}><i class="ri-robot-line"></i> 加入本群 <span class="event-time">${timeLabel(m.time)}</span></div>`;
+  if (m.type === 'robot_remove') return `<div class="msg-card event-card" ${rawClick}><i class="ri-robot-line"></i> 退出本群 <span class="event-time">${timeLabel(m.time)}</span></div>`;
+  if (m.type === 'reaction_add' || m.type === 'reaction_remove') {
+    const label = m.type === 'reaction_add' ? '添加表情表态' : '取消表情表态';
+    const emojiText = m.emoji_type == 1 ? `表情ID:${m.emoji_id}` : (m.emoji_id || '表情');
+    return `<div class="msg-card event-card" ${rawClick}><i class="ri-emotion-line"></i> ${label} ${emojiText} <span class="event-time">${timeLabel(m.time)}</span></div>`;
+  }
+  if (m.type === 'interaction') return `<div class="msg-card event-card" ${rawClick}><i class="ri-cursor-line"></i> 互动事件 <span class="event-time">${timeLabel(m.time)}</span></div>`;
+  if (m.type === 'friend_add') return `<div class="msg-card event-card" ${rawClick}><i class="ri-user-heart-line"></i> 好友添加 <span class="event-time">${timeLabel(m.time)}</span></div>`;
+  if (m.type === 'friend_del') return `<div class="msg-card event-card" ${rawClick}><i class="ri-user-unfollow-line"></i> 好友删除 <span class="event-time">${timeLabel(m.time)}</span></div>`;
+
+  const isBot = m.author_bot;
+  const avatarUrl = m.author_id ? `https://q.qlogo.cn/qqapp/102084996/${m.author_id}/640` : '';
+  const timeStr = m.time ? new Date(m.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : '';
+
+  let bodyHtml = '';
+  const rawType = m.type;
+
+  if (rawType === 'image' || rawType === 'image_text') {
+    if (m.content) bodyHtml += `<div>${parseContent(m.content)}</div>`;
+    if (m.images && m.images.length) {
+      bodyHtml += `<div class="msg-card-images">${m.images.map(img => `<img src="${esc(fixUrl(img.url))}" loading="lazy" onerror="this.style.display='none'" onclick="event.stopPropagation();window.open(this.src)">`).join('')}</div>`;
+    }
+  } else if (rawType === 'voice') {
+    bodyHtml = `<div style="display:flex;align-items:center;gap:8px;color:var(--text2)"><i class="ri-mic-line"></i> 语音消息${m.images&&m.images[0]?`<audio src="${esc(fixUrl(m.images[0].url))}" style="display:none"></audio>`:''}</div>`;
+  } else if (rawType === 'video') {
+    bodyHtml = `<div>${m.content?parseContent(m.content):''}</div>${m.images&&m.images[0]?`<video src="${esc(fixUrl(m.images[0].url))}" controls style="max-width:100%;border-radius:6px;max-height:200px;margin-top:6px"></video>`:''}`;
+  } else if (rawType === 'markdown') {
+    bodyHtml = `<div class="msg-card-body markdown">${parseMarkdown(m.content)}</div>`;
+  } else {
+    bodyHtml = `<div>${parseContent(m.content || '')}</div>`;
+    if (m.images && m.images.length) {
+      bodyHtml += `<div class="msg-card-images">${m.images.map(img => `<img src="${esc(fixUrl(img.url))}" loading="lazy" onerror="this.style.display='none'" onclick="event.stopPropagation();window.open(this.src)">`).join('')}</div>`;
+    }
+  }
+
+  return `<div class="msg-card" ${rawClick}>
+    <div class="msg-card-head">
+      <div class="msg-card-avatar">${avatarUrl?`<img src="${avatarUrl}" loading="lazy" onerror="this.style.display='none';this.parentElement.innerHTML='<i class=\\'ri-user-3-line\\'></i>'">`:''}</div>
+      <div class="msg-card-meta">
+        <div class="msg-card-name">${esc(m.author_name)}${isBot?' <span class="bot-tag">BOT</span>':''}</div>
+        <div class="msg-card-time">${timeStr}</div>
+      </div>
+    </div>
+    <div class="msg-card-body">${bodyHtml}</div>
+  </div>`;
+}
+
+function showRawByIndex(idx) {
+  const raw = LS._raw[idx] || '';
+  try { document.getElementById('rawContent').textContent = JSON.stringify(JSON.parse(raw), null, 2); }
+  catch(e) { document.getElementById('rawContent').textContent = raw; }
+  openModal('rawModal');
+}
+
+function showRawById(b64) {
+  try { document.getElementById('rawContent').textContent = decodeURIComponent(escape(atob(b64))); }
+  catch(e) { document.getElementById('rawContent').textContent = b64; }
+  openModal('rawModal');
+}
+
+function parseContent(content) {
+  if (!content) return '';
+  let html = esc(content);
+  html = html.replace(/&lt;@([A-Fa-f0-9]+)&gt;/g, '<span class="mention">@$1</span>');
+  html = html.replace(/&lt;faceType=\d+,faceId="\d*",ext="[^"]*"&gt;/g, '[表情]');
+  return html;
+}
+
+function parseMarkdown(content) {
+  if (!content) return '';
+  let html = esc(content);
+  html = html.replace(/&lt;@([A-Fa-f0-9]+)&gt;/g, '<span class="mention">@$1</span>');
+  html = html.replace(/\|(.+)\|/g, (m) => {
+    const cells = m.split('|').filter(c => c.trim());
+    return '<tr>' + cells.map(c => c.includes('---') ? '<th></th>' : `<td>${c.trim()}</td>`).join('') + '</tr>';
+  });
+  html = html.replace(/(<tr>.*<\/tr>\s*)+/g, '<table>$&</table>');
+  html = html.replace(/&gt; (.+)/g, '<blockquote>$1</blockquote>');
+  html = html.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  return html;
+}
+
+function scrollLogCardsToBottom() {
+  const c = document.getElementById('logMsgCards');
+  requestAnimationFrame(() => { c.scrollTop = c.scrollHeight; });
+}
+
+document.getElementById('logMsgCards').addEventListener('scroll', function() {
+  LS.userScrolled = this.scrollTop + this.clientHeight < this.scrollHeight - 50;
+});
+
+// Auto-refresh
+function toggleAutoRefresh() {
+  LS.autoRefresh = document.getElementById('autoRefreshToggle').checked;
+  if (LS.autoRefresh) {
+    LS.refreshTimer = setInterval(() => { if (LS.currentGroup || LS.currentC2c || LS.currentType === 'error') loadLogMessages(false); }, 3000);
+    LS.groupTimer = setInterval(loadLogGroups, 10000);
+  } else { clearInterval(LS.refreshTimer); clearInterval(LS.groupTimer); }
+}
+
+// Send message types
+function switchSendType(type, btn) {
+  LS.sendType = type;
+  document.querySelectorAll('.send-type button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const extra = document.getElementById('sendExtra');
+  const input = document.getElementById('logInput');
+  if (type === 7) {
+    extra.style.display = 'flex';
+    const label = btn.textContent.trim();
+    if (label === '图片') { LS.sendFileType = 1; input.placeholder = '输入文字（可选）'; }
+    else if (label === '视频') { LS.sendFileType = 2; input.placeholder = '输入文字（可选）'; }
+    else if (label === '语音') { LS.sendFileType = 3; input.placeholder = '输入文字（可选）'; }
+  } else if (type === 2) {
+    extra.style.display = 'none';
+    input.placeholder = '输入 Markdown 内容...';
+  } else {
+    extra.style.display = 'none';
+    input.placeholder = '输入消息...';
+  }
+}
+
+async function uploadAndSend() {
+  const url = document.getElementById('mediaUrl').value.trim();
+  const file = document.getElementById('mediaFile').files[0];
+  if (!url && !file) { showToast('提示', '请填写 URL 或选择文件', '确定'); return; }
+  showToast('上传中', '正在上传媒体文件...', '确定');
+  const params = { file_type: LS.sendFileType, url };
+  if (LS.currentType === 'c2c' && LS.currentC2c) params.c2c_user = LS.currentC2c;
+  else params.group_id = LS.currentGroup;
+  const res = await apiUpload('uploadMedia', params, 'file', file);
+  if (res.code !== 200) { showToast('上传失败', res.msg, '确定'); return; }
+  const content = document.getElementById('logInput').value.trim();
+  const mediaObj = { file_info: res.data.file_info };
+  const sendParams = { msg_type: 7, content, media: JSON.stringify(mediaObj) };
+  if (LS.currentType === 'c2c' && LS.currentC2c) sendParams.c2c_user = LS.currentC2c;
+  else sendParams.group_id = LS.currentGroup;
+  const sendRes = await api('sendMessage', sendParams);
+  if (sendRes.code === 200) {
+    showToast('已发送', '', '确定');
+    document.getElementById('logInput').value = '';
+    document.getElementById('mediaUrl').value = '';
+    document.getElementById('mediaFile').value = '';
+  } else showToast('发送失败', sendRes.msg, '确定');
+}
+
+async function sendMessage() {
+  const input = document.getElementById('logInput');
+  const content = input.value.trim();
+  if (!content && LS.sendType === 0) return;
+  const target = LS.currentType === 'c2c' ? LS.currentC2c : LS.currentGroup;
+  if (!target) return;
+
+  const file = document.getElementById('mediaFile').files[0];
+  const url = document.getElementById('mediaUrl').value.trim();
+  if (LS.sendType === 7 && (file || url)) { await uploadAndSend(); return; }
+
+  input.value = '';
+  const payload = { msg_type: LS.sendType, content };
+  if (LS.currentType === 'c2c') payload.c2c_user = target;
+  else payload.group_id = target;
+  if (LS.sendType === 2) payload.markdown = JSON.stringify({ content });
+
+  const res = await api('sendMessage', payload);
+  if (res.code === 200) showToast('已发送', '', '确定');
+  else showToast('发送失败', res.msg, '确定');
+}
+
+// ==================== Settings ====================
+async function loadSettings() {
+  const res = await api('proxySettings');
+  if (res.code === 200) {
+    const proxy = res.data.proxy || '';
+    document.getElementById('proxyUrl').value = proxy;
+    const sel = document.getElementById('proxySelect');
+    const opts = ['https://gh-proxy.com/','https://gh.llkk.cc/','https://gh.api.99988866.xyz/','https://github.moeyy.xyz/'];
+    if (!proxy) sel.value = '';
+    else if (opts.includes(proxy)) sel.value = proxy;
+    else sel.value = '__custom__';
+  }
+}
+async function saveSettings(e) {
+  e.preventDefault();
+  const admin = document.getElementById('setAdmin').value;
+  const password = document.getElementById('setPassword').value;
+  if (!admin || !password) { showToast('提示', '请填写完整', '确定'); return; }
+  const res = await api('setAdmin', { admin, password });
+  if (res.code === 200) showToast('成功', res.msg, '确定');
+  else showToast('错误', res.msg, '确定');
+}
+async function saveProxy(e) {
+  e.preventDefault();
+  const proxy = document.getElementById('proxyUrl').value;
+  const res = await api('proxySettings', { proxy });
+  if (res.code === 200) showToast('成功', '代理设置已保存', '确定');
+  else showToast('错误', res.msg, '确定');
+}
+document.getElementById('proxySelect').addEventListener('change', function() {
+  if (this.value === '__custom__') { document.getElementById('proxyUrl').value = ''; document.getElementById('proxyUrl').focus(); }
+  else document.getElementById('proxyUrl').value = this.value;
+});
+
+// ==================== Logout ====================
+async function doLogout() { const res = await api('logout'); window.location.reload(); }
+
+// ==================== Log Download/Delete ====================
+function downloadLog() {
+  const date = LS.date || document.getElementById('logDateSelect').value;
+  window.open(API + '?type=downloadLog&date=' + encodeURIComponent(date) + '&bot_id=' + encodeURIComponent(BOT_ID), '_blank');
+}
+async function deleteLogFile() {
+  const date = LS.date || document.getElementById('logDateSelect').value;
+  showToast('确认', '确定删除 ' + date + ' 的日志？此操作不可恢复', '删除', async () => {
+    const res = await api('deleteLog', { date });
+    if (res.code === 200) {
+      showToast('成功', res.msg, '确定');
+      LS.currentGroup = null; LS.currentC2c = null; LS.currentType = 'group';
+      document.getElementById('logMsgHeader').style.display = 'none';
+      document.getElementById('logMsgCards').innerHTML = '<div class="empty">日志已删除</div>';
+      document.getElementById('logInputBar').style.display = 'none';
+      loadLogGroups();
+    } else showToast('错误', res.msg, '确定');
+  });
+}
+
+// ==================== Utils ====================
+function esc(str) { if (!str) return ''; const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+function timeLabel(t) { if (!t) return ''; return new Date(t).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }); }
+function fixUrl(url) { return (url||'').replace(/\\u0026/g, '&'); }
+
+// ==================== Init ====================
+(async function init() {
+  await loadBotSelector();
+  loadDashboard();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+{
+    "Test": {
+        "type": "string",
+        "desc": "小标题",
+        "hint": "输入框内容",
+        "value": "输入框默认内容"
+    },
+    "Test2": {
+        "type": "int",
+        "desc": "标题",
+        "hint": "数字",
+        "value": 5
+    },
+    "Test3": {
+        "type": "bool",
+        "desc": "标题",
+        "hint": "开关",
+        "value": false
+    },
+    "Test4": {
+        "type": "list",
+        "desc": "标题",
+        "items": {
+            "Test": {
+                "type": "string",
+                "desc": "小标题",
+                "hint": "输入框内容",
+                "value": "输入框默认内容"
+            },
+            "Test2": {
+                "type": "int",
+                "desc": "标题",
+                "hint": "数字",
+                "value": 5
+            },
+            "Test3": {
+                "type": "bool",
+                "desc": "标题",
+                "hint": "开关",
+                "value": true
+            }
+        }
+    }
+}

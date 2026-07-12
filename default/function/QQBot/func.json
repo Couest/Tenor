@@ -1,0 +1,8 @@
+{
+    "desc": "需要new \qqbot()",
+    "list": [
+        {
+            "sendGroup(消息ID,群号,消息类型,其他参数)": "text => ①内容<br>md => ①MD内容②按钮json"
+        }
+    ]
+}

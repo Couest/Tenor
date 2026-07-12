@@ -1,4 +1,5 @@
 <?php
+include __DIR__."/button.php";
 
 class qqbot {
     private $appid;
@@ -43,13 +44,28 @@ class qqbot {
                     "msg_type" => 0,
                     "msg_seq" => rand(1,99999),
                 ];
-                if (前缀($id,"ROBOT")) {
-                    $json["msg_id"] = $id;
-                } else {
-                    $json["event_id"] = $id;
-                }
-                $this->BOTAPI("/v2/groups/{$group}/messages","POST",$json);
+                break;
+            
+            case "md":
+                $json = [
+                   "content" => "",
+                   "msg_type" => 2,
+                   "msg_seq" => rand(1, 9999),
+                   "markdown" => [
+                       "content" => $value[0],
+                   ],
+                   "keyboard" => [
+                       "content" => json_decode($value[1],true)
+                   ]
+               ];
+               break;
         }
+        if (前缀($id,"ROBOT")) {
+            $json["msg_id"] = $id;
+        } else {
+            $json["event_id"] = $id;
+        }
+        return $this->BOTAPI("/v2/groups/{$group}/messages","POST",$json);
     }
 
 }

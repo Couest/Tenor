@@ -2,13 +2,13 @@
     "bot": [
         {
             "id": "default",
-            "status":true,
+            "status": true,
             "appid": "",
             "secret": ""
         }
     ],
-    "admin": {
-        "account": "admin",
+    "account": {
+        "admin": "admin",
         "password": "123456"
     }
 }
